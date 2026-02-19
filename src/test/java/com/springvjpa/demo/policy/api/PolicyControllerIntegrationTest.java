@@ -4,6 +4,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -20,10 +21,10 @@ class PolicyControllerIntegrationTest {
     @Test
     void shouldReturnPoliciesFilteredByYearAndStatus() throws Exception {
         mockMvc.perform(get("/api/policies")
-                        .queryParam("year", "2024")
+                        .queryParam("year", String.valueOf(LocalDate.now().getYear()))
                         .queryParam("status", "NEEDS_REVIEW"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].department").value("Education"))
+                .andExpect(jsonPath("$[0].department").value(org.hamcrest.Matchers.containsStringIgnoringCase("revenue")))
                 .andExpect(jsonPath("$[0].validationStatus").value("NEEDS_REVIEW"));
     }
 

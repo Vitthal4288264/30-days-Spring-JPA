@@ -8,6 +8,7 @@ import com.springvjpa.demo.policy.repo.PolicyRepository;
 import com.springvjpa.demo.validation.domain.ValidationResult;
 import com.springvjpa.demo.validation.repo.ValidationResultRepository;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -20,82 +21,72 @@ public class DataInitializer {
     CommandLineRunner loadData(
             PolicyRepository policyRepository,
             LawReferenceRepository lawReferenceRepository,
-            ValidationResultRepository validationResultRepository
+            ValidationResultRepository validationResultRepository,
+            DepartmentScraperClient departmentScraperClient
     ) {
         return args -> {
             if (policyRepository.count() > 0) {
                 return;
             }
 
-            Policy p1 = new Policy(
-                    "State Urban Livelihood Support Policy",
-                    "Karnataka",
-                    "Urban Development",
-                    LocalDate.of(2023, 2, 14),
-                    2023,
-                    "https://example.karnataka.gov.in/urban/policy-2023",
-                    "Policy to improve skill support and self-employment for urban low-income households.",
-                    ValidationStatus.VALID
-            );
-            Policy p2 = new Policy(
-                    "Green Schools Energy Usage Notification",
-                    "Karnataka",
-                    "Education",
-                    LocalDate.of(2024, 8, 2),
-                    2024,
-                    "https://example.karnataka.gov.in/edu/green-schools-2024",
-                    "Guidelines for monitoring and reducing electricity consumption in public schools.",
-                    ValidationStatus.NEEDS_REVIEW
-            );
-            Policy p3 = new Policy(
-                    "Groundwater Commercial Extraction Circular",
-                    "Karnataka",
-                    "Water Resources",
-                    LocalDate.of(2024, 5, 19),
-                    2024,
-                    "https://example.karnataka.gov.in/water/circular-05-2024",
-                    "Temporary conditions for commercial groundwater extraction in notified zones.",
-                    ValidationStatus.CONFLICT_SUSPECTED
-            );
-            policyRepository.saveAll(List.of(p1, p2, p3));
+            List<DepartmentScraperClient.ScrapedDepartment> scrapedDepartments =
+                    departmentScraperClient.fetchTargetDepartments();
 
-            LawReference l1 = new LawReference(
-                    "Karnataka Ground Water Act",
-                    "Section 7",
-                    "Karnataka",
-                    LocalDate.of(2011, 1, 1)
-            );
-            LawReference l2 = new LawReference(
-                    "Energy Conservation Guidelines for Public Institutions",
-                    "Rule 12",
-                    "Karnataka",
-                    LocalDate.of(2020, 4, 1)
-            );
-            lawReferenceRepository.saveAll(List.of(l1, l2));
+            List<Policy> policies = new ArrayList<>();
+            LocalDate publicationDate = LocalDate.now();
 
-            validationResultRepository.saveAll(List.of(
-                    new ValidationResult(
-                            p1,
-                            l2,
-                            "Valid",
-                            "No conflicting clauses detected for energy usage or procurement references.",
-                            LocalDate.now().minusDays(8)
-                    ),
-                    new ValidationResult(
-                            p2,
-                            l2,
-                            "Needs Review",
-                            "Implementation timeline is not aligned with mandatory annual reporting window.",
-                            LocalDate.now().minusDays(2)
-                    ),
-                    new ValidationResult(
-                            p3,
-                            l1,
-                            "Conflict Suspected",
-                            "Circular grants temporary exemptions that may exceed statutory extraction caps.",
-                            LocalDate.now().minusDays(1)
-                    )
-            ));
+            for (DepartmentScraperClient.ScrapedDepartment department : scrapedDepartments) {
+                ValidationStatus status = department.name().toLowerCase().contains("revenue")
+                        ? ValidationStatus.NEEDS_REVIEW
+                        : ValidationStatus.VALID;
+
+                policies.add(new Policy(
+                        department.name() + " - Latest Department Listing",
+                        "Karnataka",
+                        department.name(),
+                        publicationDate,
+                        publicationDate.getYear(),
+                        department.sourceUrl(),
+                        "Auto-scraped from Karnataka Mahiti Kanaja department portal.",
+                        status
+                ));
+            }
+
+            policyRepository.saveAll(policies);
+
+            LawReference revenueLaw = new LawReference(
+                    "Karnataka Land Revenue Act",
+                    "Section 1",
+                    "Karnataka",
+                    LocalDate.of(1964, 1, 1)
+            );
+            LawReference urbanLaw = new LawReference(
+                    "Karnataka Town and Country Planning Act",
+                    "Section 14",
+                    "Karnataka",
+                    LocalDate.of(1961, 1, 1)
+            );
+            lawReferenceRepository.saveAll(List.of(revenueLaw, urbanLaw));
+
+            List<ValidationResult> validationResults = new ArrayList<>();
+            for (Policy policy : policies) {
+                LawReference lawReference = policy.getDepartment().toLowerCase().contains("revenue")
+                        ? revenueLaw
+                        : urbanLaw;
+                String result = policy.getValidationStatus() == ValidationStatus.NEEDS_REVIEW
+                        ? "Needs Review"
+                        : "Valid";
+
+                validationResults.add(new ValidationResult(
+                        policy,
+                        lawReference,
+                        result,
+                        "Validation generated for scraped department information.",
+                        publicationDate
+                ));
+            }
+
+            validationResultRepository.saveAll(validationResults);
         };
     }
 }

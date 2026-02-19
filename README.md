@@ -129,9 +129,31 @@ This repository now includes a Spring Boot backend implementation for the Phase 
 - `GET /api/validation-results`
   - Optional query param: `policyId`
 
-### Run
-```bash
-./gradlew bootRun
-```
+## Run Locally
 
-H2 console is enabled at `/h2-console`.
+### Prerequisites
+1. **Java 21** (required by Gradle toolchain configuration in this project)
+2. Internet access for the first Gradle dependency download
+
+> You do **not** need to install Gradle manually because this repository includes the Gradle Wrapper (`./gradlew`).
+
+### Steps
+1. Clone and enter the project:
+   ```bash
+   git clone <your-repo-url>
+   cd 30-days-Spring-JPA
+   ```
+
+2. Start the Spring Boot app:
+   ```bash
+   ./gradlew bootRun
+   ```
+
+3. Access the app and tooling:
+   - API base: `http://localhost:8080/api`
+   - H2 console: `http://localhost:8080/h2-console`
+
+### Manual setup (keys / env variables / secrets)
+- **No API keys are required** for the current implementation.
+- **No environment variables are required** to run with the default in-memory H2 setup.
+- If you later switch to an external database, you will need to provide datasource settings (for example `spring.datasource.url`, username, and password) through `application.properties` or environment variables.

@@ -114,3 +114,24 @@ Policy information is often distributed across many portals and PDF documents. T
 
 ## Disclaimer
 This platform provides informational insights from publicly available data. Legal validation output is a decision-support aid and should be reviewed by legal experts before final use.
+
+## Implemented Backend (Current)
+This repository now includes a Spring Boot backend implementation for the Phase 1 scope:
+- Policy, LawReference, and ValidationResult JPA entities
+- In-memory H2 database setup with demo seed data
+- REST endpoints for policy listing, filtering, yearly counts, law references, and validation results
+
+### API Endpoints
+- `GET /api/policies`
+  - Optional query params: `year`, `department`, `status` (`VALID`, `NEEDS_REVIEW`, `CONFLICT_SUSPECTED`)
+- `GET /api/policies/yearly-count`
+- `GET /api/law-references`
+- `GET /api/validation-results`
+  - Optional query param: `policyId`
+
+### Run
+```bash
+./gradlew bootRun
+```
+
+H2 console is enabled at `/h2-console`.

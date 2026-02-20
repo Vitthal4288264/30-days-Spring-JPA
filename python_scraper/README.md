@@ -43,7 +43,6 @@ python_scraper/
 ```bash
 cd python_scraper
 python3.11 -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
 playwright install chromium
 cp .env.example .env
@@ -71,7 +70,8 @@ data/
   schemes.db
   api_hints.jsonl
   resume_state.json
-  run_config.json
+  run_config.jsonsource .venv/bin/activate
+
 ```
 
 ## Dynamic DOM handling notes

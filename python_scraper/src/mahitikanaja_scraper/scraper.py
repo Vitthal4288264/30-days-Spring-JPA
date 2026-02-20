@@ -139,4 +139,5 @@ def dump_config_snapshot(cfg: ScraperConfig) -> None:
         "district": cfg.district,
         "output_format": cfg.output_format,
     }
+    cfg.output_dir.mkdir(parents=True, exist_ok=True)
     (cfg.output_dir / "run_config.json").write_text(json.dumps(snapshot, indent=2), encoding="utf-8")
